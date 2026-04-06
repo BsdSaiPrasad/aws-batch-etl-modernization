@@ -28,7 +28,6 @@
       ],
       "Next": "SourceCheckPassed"
     },
-
     "SourceCheckPassed": {
       "Type": "Choice",
       "Choices": [
@@ -40,7 +39,6 @@
       ],
       "Default": "NotifyFailure"
     },
-
     "RunCustomersGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -66,7 +64,6 @@
       ],
       "Next": "RunAgentsGlueJob"
     },
-
     "RunAgentsGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -92,7 +89,6 @@
       ],
       "Next": "RunPoliciesGlueJob"
     },
-
     "RunPoliciesGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -118,7 +114,6 @@
       ],
       "Next": "RunClaimsGlueJob"
     },
-
     "RunClaimsGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -144,7 +139,6 @@
       ],
       "Next": "RunPaymentsGlueJob"
     },
-
     "RunPaymentsGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -170,7 +164,6 @@
       ],
       "Next": "RunCuratedCheck"
     },
-
     "RunCuratedCheck": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -197,7 +190,6 @@
       ],
       "Next": "CuratedCheckPassed"
     },
-
     "CuratedCheckPassed": {
       "Type": "Choice",
       "Choices": [
@@ -209,7 +201,6 @@
       ],
       "Default": "NotifyFailure"
     },
-
     "NotifySuccess": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
@@ -220,7 +211,6 @@
       },
       "Next": "PipelineSucceeded"
     },
-
     "NotifyFailure": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
@@ -231,11 +221,9 @@
       },
       "Next": "PipelineFailed"
     },
-
     "PipelineSucceeded": {
       "Type": "Succeed"
     },
-
     "PipelineFailed": {
       "Type": "Fail",
       "Cause": "Pipeline execution failed"
