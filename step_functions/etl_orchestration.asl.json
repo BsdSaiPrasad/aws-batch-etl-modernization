@@ -1,0 +1,244 @@
+{
+  "Comment": "Batch ETL pipeline with source check, Glue jobs, curated validation, and SNS alerts",
+  "StartAt": "CheckSourceAvailable",
+  "States": {
+    "CheckSourceAvailable": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "batch-etl-modernization-dev-source-check",
+        "Payload": {
+          "load_date.$": "$.load_date"
+        }
+      },
+      "OutputPath": "$.Payload",
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "SourceCheckPassed"
+    },
+
+    "SourceCheckPassed": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.status",
+          "StringEquals": "success",
+          "Next": "RunCustomersGlueJob"
+        }
+      ],
+      "Default": "NotifyFailure"
+    },
+
+    "RunCustomersGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "batch-etl-modernization-dev-std-customers",
+        "Arguments": {
+          "--LOAD_DATE.$": "$.load_date"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "RunAgentsGlueJob"
+    },
+
+    "RunAgentsGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "batch-etl-modernization-dev-std-agents",
+        "Arguments": {
+          "--LOAD_DATE.$": "$.load_date"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "RunPoliciesGlueJob"
+    },
+
+    "RunPoliciesGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "batch-etl-modernization-dev-std-policies",
+        "Arguments": {
+          "--LOAD_DATE.$": "$.load_date"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "RunClaimsGlueJob"
+    },
+
+    "RunClaimsGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "batch-etl-modernization-dev-std-claims",
+        "Arguments": {
+          "--LOAD_DATE.$": "$.load_date"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "RunPaymentsGlueJob"
+    },
+
+    "RunPaymentsGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "batch-etl-modernization-dev-std-payments",
+        "Arguments": {
+          "--LOAD_DATE.$": "$.load_date"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "RunCuratedCheck"
+    },
+
+    "RunCuratedCheck": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "batch-etl-modernization-dev-curated-check",
+        "Payload": {
+          "load_date.$": "$.load_date"
+        }
+      },
+      "OutputPath": "$.Payload",
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "NotifyFailure"
+        }
+      ],
+      "Next": "CuratedCheckPassed"
+    },
+
+    "CuratedCheckPassed": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.status",
+          "StringEquals": "success",
+          "Next": "NotifySuccess"
+        }
+      ],
+      "Default": "NotifyFailure"
+    },
+
+    "NotifySuccess": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:us-east-1:720800607159:batch-etl-modernization-dev-alerts",
+        "Subject": "Batch ETL pipeline succeeded",
+        "Message.$": "States.Format('Pipeline succeeded for load_date {}', $.load_date)"
+      },
+      "Next": "PipelineSucceeded"
+    },
+
+    "NotifyFailure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "arn:aws:sns:us-east-1:720800607159:batch-etl-modernization-dev-alerts",
+        "Subject": "Batch ETL pipeline failed",
+        "Message.$": "States.Format('Pipeline failed for load_date {}', $.load_date)"
+      },
+      "Next": "PipelineFailed"
+    },
+
+    "PipelineSucceeded": {
+      "Type": "Succeed"
+    },
+
+    "PipelineFailed": {
+      "Type": "Fail",
+      "Cause": "Pipeline execution failed"
+    }
+  }
+}

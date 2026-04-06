@@ -1,4 +1,3 @@
-cat > .gitignore <<'EOF'
 # Python
 __pycache__/
 *.pyc
@@ -33,7 +32,9 @@ override.tf.json
 # Logs
 *.log
 
+# Build artifacts
+*.zip
+
 # Keep these local only
 docs/interview_notes.md
 docs/progress_log.md
-EOF
