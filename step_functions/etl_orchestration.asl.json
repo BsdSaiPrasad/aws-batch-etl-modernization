@@ -14,8 +14,7 @@
       "ResultSelector": {
         "status.$": "$.Payload.status",
         "load_date.$": "$.Payload.load_date",
-        "message.$": "$.Payload.message",
-        "missing_tables.$": "$.Payload.missing_tables"
+        "message.$": "$.Payload.message"
       },
       "ResultPath": "$.source_check",
       "Retry": [
@@ -220,8 +219,7 @@
       "ResultSelector": {
         "status.$": "$.Payload.status",
         "load_date.$": "$.Payload.load_date",
-        "message.$": "$.Payload.message",
-        "missing_datasets.$": "$.Payload.missing_datasets"
+        "message.$": "$.Payload.message"
       },
       "ResultPath": "$.curated_check",
       "Retry": [
