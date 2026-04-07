@@ -11,34 +11,48 @@
           "load_date.$": "$.load_date"
         }
       },
-      "OutputPath": "$.Payload",
+      "ResultSelector": {
+        "status.$": "$.Payload.status",
+        "load_date.$": "$.Payload.load_date",
+        "message.$": "$.Payload.message",
+        "missing_tables.$": "$.Payload.missing_tables"
+      },
+      "ResultPath": "$.source_check",
       "Retry": [
         {
-          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
           "IntervalSeconds": 5,
           "MaxAttempts": 2,
-          "BackoffRate": 2.0
+          "BackoffRate": 2
         }
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "NotifyFailure"
         }
       ],
       "Next": "SourceCheckPassed"
     },
+
     "SourceCheckPassed": {
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.status",
+          "Variable": "$.source_check.status",
           "StringEquals": "success",
           "Next": "RunCustomersGlueJob"
         }
       ],
       "Default": "NotifyFailure"
     },
+
     "RunCustomersGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -48,22 +62,28 @@
           "--LOAD_DATE.$": "$.load_date"
         }
       },
+      "ResultPath": "$.customers_glue",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 10,
           "MaxAttempts": 2,
-          "BackoffRate": 2.0
+          "BackoffRate": 2
         }
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "NotifyFailure"
         }
       ],
       "Next": "RunAgentsGlueJob"
     },
+
     "RunAgentsGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -73,22 +93,28 @@
           "--LOAD_DATE.$": "$.load_date"
         }
       },
+      "ResultPath": "$.agents_glue",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 10,
           "MaxAttempts": 2,
-          "BackoffRate": 2.0
+          "BackoffRate": 2
         }
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "NotifyFailure"
         }
       ],
       "Next": "RunPoliciesGlueJob"
     },
+
     "RunPoliciesGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -98,22 +124,28 @@
           "--LOAD_DATE.$": "$.load_date"
         }
       },
+      "ResultPath": "$.policies_glue",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 10,
           "MaxAttempts": 2,
-          "BackoffRate": 2.0
+          "BackoffRate": 2
         }
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "NotifyFailure"
         }
       ],
       "Next": "RunClaimsGlueJob"
     },
+
     "RunClaimsGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -123,22 +155,28 @@
           "--LOAD_DATE.$": "$.load_date"
         }
       },
+      "ResultPath": "$.claims_glue",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 10,
           "MaxAttempts": 2,
-          "BackoffRate": 2.0
+          "BackoffRate": 2
         }
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "NotifyFailure"
         }
       ],
       "Next": "RunPaymentsGlueJob"
     },
+
     "RunPaymentsGlueJob": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
@@ -148,22 +186,28 @@
           "--LOAD_DATE.$": "$.load_date"
         }
       },
+      "ResultPath": "$.payments_glue",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 10,
           "MaxAttempts": 2,
-          "BackoffRate": 2.0
+          "BackoffRate": 2
         }
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "NotifyFailure"
         }
       ],
       "Next": "RunCuratedCheck"
     },
+
     "RunCuratedCheck": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -173,34 +217,48 @@
           "load_date.$": "$.load_date"
         }
       },
-      "OutputPath": "$.Payload",
+      "ResultSelector": {
+        "status.$": "$.Payload.status",
+        "load_date.$": "$.Payload.load_date",
+        "message.$": "$.Payload.message",
+        "missing_datasets.$": "$.Payload.missing_datasets"
+      },
+      "ResultPath": "$.curated_check",
       "Retry": [
         {
-          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
           "IntervalSeconds": 5,
           "MaxAttempts": 2,
-          "BackoffRate": 2.0
+          "BackoffRate": 2
         }
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "NotifyFailure"
         }
       ],
       "Next": "CuratedCheckPassed"
     },
+
     "CuratedCheckPassed": {
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.status",
+          "Variable": "$.curated_check.status",
           "StringEquals": "success",
           "Next": "NotifySuccess"
         }
       ],
       "Default": "NotifyFailure"
     },
+
     "NotifySuccess": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
@@ -211,6 +269,7 @@
       },
       "Next": "PipelineSucceeded"
     },
+
     "NotifyFailure": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
@@ -221,9 +280,11 @@
       },
       "Next": "PipelineFailed"
     },
+
     "PipelineSucceeded": {
       "Type": "Succeed"
     },
+
     "PipelineFailed": {
       "Type": "Fail",
       "Cause": "Pipeline execution failed"
