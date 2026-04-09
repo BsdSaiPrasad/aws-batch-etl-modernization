@@ -133,3 +133,5 @@ Next Steps
 	6.	Add Redshift load
 	7.	Add orchestration
 	8.	Add Terraform + GitHub Actions
+## CI/CD note
+Using branch + PR flow for validation before merge.
