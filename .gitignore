@@ -37,4 +37,4 @@ override.tf.json
 
 # Keep these local only
 docs/interview_notes.md
-docs/progress_log.md
+docs/progress_log.md.DS_Store
